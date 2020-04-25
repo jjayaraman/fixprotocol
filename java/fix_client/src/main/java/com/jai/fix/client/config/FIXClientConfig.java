@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.ResourceUtils;
 import quickfix.*;
+
+import java.io.FileNotFoundException;
 
 @Configuration
 @Slf4j
@@ -15,23 +18,22 @@ public class FIXClientConfig {
     @Autowired
     private ClientApplication application;
 
-    @Value(value = "")
-    private final String configFile = "/Users/jay/git_jay/fixprotocol/java/fix_server/src/main/resources/settings.cfg";
+    private String configFile = ResourceUtils.CLASSPATH_URL_PREFIX + "settings.cfg";
 
     @Bean
-    public void fixClientConfig() {
+    public void client() {
 
         SocketInitiator initiator = null;
 
         try {
+            SessionSettings sessionSettings = new SessionSettings(ResourceUtils.getFile(configFile).getAbsolutePath());
+            MessageStoreFactory messageStoreFactory = new FileStoreFactory(sessionSettings);
+            LogFactory logFactory = new FileLogFactory(sessionSettings);
+            MessageFactory messageFactory = new DefaultMessageFactory();
 
-            MessageStoreFactory messageStoreFactory = new MemoryStoreFactory();
-            SessionSettings sessionSettings = new SessionSettings(configFile);
-
-            MessageFactory logFactory = null;
-
-            initiator = new SocketInitiator(application, messageStoreFactory, sessionSettings, logFactory);
+            initiator = new SocketInitiator(application, messageStoreFactory, sessionSettings, logFactory, messageFactory);
             initiator.start();
+
 
             log.debug("Initiator started...");
             while (true) {
@@ -40,9 +42,10 @@ public class FIXClientConfig {
 
             }
 
-
         } catch (ConfigError ce) {
             ce.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } finally {
             initiator.stop();
             log.debug("Initiator stopped...");

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.ResourceUtils;
 import quickfix.*;
 
 import java.io.FileInputStream;
@@ -17,38 +18,23 @@ public class FIXServerConfig {
     @Autowired
     private ServerApplicationImpl application;
 
-    private String qfSettings = "/Users/jay/git_jay/fixprotocol/java/fix_server/src/main/resources/settings.cfg";
+    private String configFile = ResourceUtils.CLASSPATH_URL_PREFIX + "settings.cfg";
 
     @Bean
-    public void server() {
-        SessionSettings settings = null;
+    public Acceptor getSocketAcceptor() {
         Acceptor acceptor = null;
-        Initiator initiator = null;
         try {
-
-            settings = new SessionSettings(new FileInputStream(qfSettings));
+            SessionSettings settings = new SessionSettings(ResourceUtils.getFile(configFile).getAbsolutePath());
             MessageStoreFactory storeFactory = new FileStoreFactory(settings);
             LogFactory logFactory = new FileLogFactory(settings);
             MessageFactory messageFactory = new DefaultMessageFactory();
-            //acceptor = new SocketAcceptor(application, storeFactory, settings, logFactory, messageFactory);
-            // acceptor.start();
-            initiator = new SocketInitiator(application, storeFactory, settings, logFactory, messageFactory);
-            initiator.start();
-
-            log.debug("Server listening... ");
-            while (true) {
-                // TODO: logics
-
-            }
+            acceptor = new SocketAcceptor(application, storeFactory, settings, logFactory, messageFactory);
         } catch (ConfigError ce) {
             ce.printStackTrace();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            //acceptor.stop();
-            initiator.stop();
-            log.debug("Server stopped... ");
         }
+        return acceptor;
     }
 
 }
