@@ -30,9 +30,9 @@ public class FIXServerConfig {
             MessageFactory messageFactory = new DefaultMessageFactory();
             acceptor = new SocketAcceptor(application, storeFactory, settings, logFactory, messageFactory);
         } catch (ConfigError ce) {
-            ce.printStackTrace();
+            log.error(ce.getMessage());
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return acceptor;
     }

@@ -3,7 +3,6 @@ package com.jai.fix.client.config;
 import com.jai.fix.client.quickfix.ClientApplication;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.ResourceUtils;
@@ -21,9 +20,9 @@ public class FIXClientConfig {
     private String configFile = ResourceUtils.CLASSPATH_URL_PREFIX + "settings.cfg";
 
     @Bean
-    public void client() {
+    public SocketInitiator getSocketInitiator() {
 
-        SocketInitiator initiator = null;
+        SocketInitiator socketInitiator = null;
 
         try {
             SessionSettings sessionSettings = new SessionSettings(ResourceUtils.getFile(configFile).getAbsolutePath());
@@ -31,24 +30,13 @@ public class FIXClientConfig {
             LogFactory logFactory = new FileLogFactory(sessionSettings);
             MessageFactory messageFactory = new DefaultMessageFactory();
 
-            initiator = new SocketInitiator(application, messageStoreFactory, sessionSettings, logFactory, messageFactory);
-            initiator.start();
-
-
-            log.debug("Initiator started...");
-            while (true) {
-                // TODO: logics
-
-
-            }
+            socketInitiator = new SocketInitiator(application, messageStoreFactory, sessionSettings, logFactory, messageFactory);
 
         } catch (ConfigError ce) {
-            ce.printStackTrace();
+            log.error(ce.getMessage());
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } finally {
-            initiator.stop();
-            log.debug("Initiator stopped...");
+            log.error(e.getMessage());
         }
+        return socketInitiator;
     }
 }

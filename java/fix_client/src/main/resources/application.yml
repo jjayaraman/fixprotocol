@@ -1,2 +1,11 @@
 server:
   port : 8081
+
+spring:
+  output:
+    ansi:
+      enabled: ALWAYS
+
+logging:
+  level:
+    com.jai: debug
